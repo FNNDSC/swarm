@@ -21,7 +21,7 @@ class SwarmManager(object):
         """
         Internal method to get a docker client connected to remote or local docker deamon.
         """
-        if options_file==None:
+        if options_filepath==None:
             self.docker_client = docker.from_env()
         else:
             options = {}
@@ -34,6 +34,7 @@ class SwarmManager(object):
         """
         Get the Swarm's state info.
         """
+        print("Working!")
 
     def run(self, args=None):
         """
