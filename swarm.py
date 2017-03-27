@@ -4,6 +4,8 @@ manage their state in the cluster.
 """
 
 from argparse import ArgumentParser
+import configparser
+import json
 import docker
 
 
@@ -12,46 +14,95 @@ class SwarmManager(object):
     def __init__(self):
         parser = ArgumentParser(description='Manage a swarm cluster')
 
-        parser.add_argument("-i", "--info", action="store_true",
-                            help="get swarm cluster info")
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument("-s", "--schedule", help="schedule a new service",
+                           metavar='name')
+        group.add_argument("-r", "--remove", help="remove a previously scheduled service",
+                           metavar='name')
+        group.add_argument("--state", help="print state of scheduled service",
+                           metavar='name')
+        parser.add_argument("--conffile", help="swarm cluster configuration file")
+        parser.add_argument("-i", "--image",
+                            help="docker image for the scheduled service container")
+        parser.add_argument("-c", "--command",
+                            help="command to be run inside scheduled service container")
         self.parser = parser
         self.docker_client = None
+        self.args = None
 
-    def _get_docker_client(self, options_filepath=None):
+    def _get_docker_client(self, conf_filepath=None):
         """
         Internal method to get a docker client connected to remote or local docker deamon.
         """
-        if options_filepath==None:
+        if conf_filepath is None:
             self.docker_client = docker.from_env()
         else:
-            options = {}
-            with open(options_filepath, 'r') as options_file:
-                options = json.load(options_file)
-            if base_url in options:
-                self.docker_client = docker.DockerClient(base_url=options.base_url)
+            conf = configparser.ConfigParser()
+            conf.read(conf_filepath)
+            conf_dict = conf['DEFAULT']
+            base_url = 'unix://var/run/docker.sock'
+            if 'base_url' in conf_dict:
+                base_url = conf_dict.base_url
+            self.docker_client = docker.DockerClient(base_url=base_url)
 
-    def get_info(self):
+    def schedule(self, image, command, name):
         """
-        Get the Swarm's state info.
+        Schedule a new service and returns the service object.
         """
-        print("Working!")
+        # 'on-failure' restart_policy ensures that the service will not be rescheduled
+        # when it completes
+        restart_policy = docker.types.RestartPolicy(condition='on-failure')
+        return self.docker_client.services.create(image, command, name=name,
+                                                  restart_policy=restart_policy)
 
-    def run(self, args=None):
+    def get_service(self, name):
+        """
+        Get a previously scheduled service object.
+        """
+        return self.docker_client.services.get(name)
+
+    def get_service_container(self, name):
+        """
+        Get docker container for a previously scheduled service object.
+        """
+        return self.get_service(name).tasks()[0]
+
+    def remove(self, name):
+        """
+        Remove a previously scheduled service.
+        """
+        serv = self.get_service(name)
+        return serv.remove()
+
+    def parse(self, args=None):
         """
         Parse the arguments passed to the manager and perform the appropriate action.
         """
+        # parse argument options
         options = self.parser.parse_args(args)
-        if options.info:
-            self.get_info()
 
-        self.args = options
+        # get the docker client
+        if options.conffile:
+            self._get_docker_client(options.conffile)
+        else:
+            self._get_docker_client()
 
+        if options.schedule:
+            if not (options.image and options.command):
+                self.parser.error("-s/--schedule requires -i/--image and -c/--command")
+            self.schedule(options.image, options.command, options.schedule)
 
+        if options.remove:
+            self.remove(options.remove)
+
+        if options.state:
+            container = self.get_service_container(options.state)
+            print(json.dumps(container))
 
 
 # ENTRYPOINT
 if __name__ == "__main__":
     manager = SwarmManager()
-    manager.run()
+    manager.parse()
 
 

@@ -11,4 +11,4 @@ WORKDIR $APPROOT
 RUN pip install -r requirements.txt
 
 ENTRYPOINT ["python"]
-CMD ["swarm.py", "--info"]
+CMD ["swarm.py", "--help"]
