@@ -28,11 +28,10 @@ class SwarmManager(object):
                             help="command to be run inside scheduled service container")
         self.parser = parser
         self.docker_client = None
-        self.args = None
 
-    def _get_docker_client(self, conf_filepath=None):
+    def get_docker_client(self, conf_filepath=None):
         """
-        Internal method to get a docker client connected to remote or local docker deamon.
+        Method to get a docker client connected to remote or local docker deamon.
         """
         if conf_filepath is None:
             self.docker_client = docker.from_env()
@@ -83,9 +82,9 @@ class SwarmManager(object):
 
         # get the docker client
         if options.conffile:
-            self._get_docker_client(options.conffile)
+            self.get_docker_client(options.conffile)
         else:
-            self._get_docker_client()
+            self.get_docker_client()
 
         if options.schedule:
             if not (options.image and options.command):
