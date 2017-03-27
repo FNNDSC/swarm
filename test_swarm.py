@@ -30,11 +30,13 @@ class SwarmManagerTests(unittest.TestCase):
         self.manager.schedule(self.image, self.command, self.service_name)
         service = self.docker_client.services.get(self.service_name)
         self.assertIsInstance(service, docker.models.services.Service)
+        service.remove()
 
     def test_get_service(self):
-        serv cls.docker_client.services.create(self.image, self.command,
-                                          name=self.service_name)
-
+        service = self.docker_client.services.create(self.image, self.command, name=self.service_name)
+        service1 = self.manager.get_service(self.service_name)
+        self.assertEqual(service, service1)
+        service.remove()
 
 if __name__ == '__main__':
     unittest.main()
