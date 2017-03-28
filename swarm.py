@@ -70,8 +70,8 @@ class SwarmManager(object):
         """
         Remove a previously scheduled service.
         """
-        serv = self.get_service(name)
-        return serv.remove()
+        service = self.get_service(name)
+        service.remove()
 
     def parse(self, args=None):
         """
