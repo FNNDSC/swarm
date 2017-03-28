@@ -1,6 +1,5 @@
 import unittest
 from swarm import SwarmManager
-import json
 import docker
 
 
@@ -37,6 +36,18 @@ class SwarmManagerTests(unittest.TestCase):
         service1 = self.manager.get_service(self.service_name)
         self.assertEqual(service, service1)
         service.remove()
+
+    def test_get_service_container(self):
+        service = self.docker_client.services.create(self.image, self.command, name=self.service_name)
+        container = self.manager.get_service_container(self.service_name)
+        self.assertEqual(container['ServiceID'], service.id)
+        service.remove()
+
+    def test_remove(self):
+        self.docker_client.services.create(self.image, self.command, name=self.service_name)
+        self.assertEqual(len(self.docker_client.services.list()), 1)
+        self.manager.remove(self.service_name)
+        self.assertEqual(len(self.docker_client.services.list()), 0)
 
 if __name__ == '__main__':
     unittest.main()
