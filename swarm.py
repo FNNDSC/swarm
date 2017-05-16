@@ -26,6 +26,10 @@ class SwarmManager(object):
                             help="docker image for the scheduled service container")
         parser.add_argument("-c", "--command",
                             help="command to be run inside scheduled service container")
+        parser.add_argument("-p", "--restart-policy",
+                            help="restart policy on scheduled jobs",
+                            metavar='restart',
+                            default='on-failure')
         parser.add_argument("-m", "--mount", help="mount directory in the cluster",
                             metavar='dir')
         self.parser = parser
@@ -46,13 +50,13 @@ class SwarmManager(object):
                 base_url = conf_dict.base_url
             self.docker_client = docker.DockerClient(base_url=base_url)
 
-    def schedule(self, image, command, name, mountdir=None):
+    def schedule(self, image, command, name, restart_policy, mountdir=None):
         """
         Schedule a new service and returns the service object.
         """
         # 'on-failure' restart_policy ensures that the service will not be rescheduled
         # when it completes
-        restart_policy = docker.types.RestartPolicy(condition='on-failure')
+        restart_policy = docker.types.RestartPolicy(condition=restart_policy)
         mounts = []
         if mountdir is not None:
             mounts.append('%s:/share:rw' % mountdir)
@@ -94,7 +98,7 @@ class SwarmManager(object):
         if options.schedule:
             if not (options.image and options.command):
                 self.parser.error("-s/--schedule requires -i/--image and -c/--command")
-            self.schedule(options.image, options.command, options.schedule,
+            self.schedule(options.image, options.command, options.schedule, options.restart
                           options.mount)
 
         if options.remove:
