@@ -24,9 +24,10 @@ class SwarmManagerTests(unittest.TestCase):
         self.service_name = 'simple_service'
         self.image = 'alpine'
         self.command = 'echo test'
+        self.restart_policy = 'on-failure'
 
     def test_schedule(self):
-        self.manager.schedule(self.image, self.command, self.service_name)
+        self.manager.schedule(self.image, self.command, self.service_name, self.restart_policy)
         service = self.docker_client.services.get(self.service_name)
         self.assertIsInstance(service, docker.models.services.Service)
         service.remove()
