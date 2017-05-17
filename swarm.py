@@ -26,7 +26,7 @@ class SwarmManager(object):
                             help="docker image for the scheduled service container")
         parser.add_argument("-c", "--command",
                             help="command to be run inside scheduled service container")
-        parser.add_argument("-p", "--restart-policy",
+        parser.add_argument("-p", "--restart_policy",
                             help="restart policy on scheduled jobs",
                             default='on-failure')
         parser.add_argument("-m", "--mount", help="mount directory in the cluster",
@@ -97,7 +97,7 @@ class SwarmManager(object):
         if options.schedule:
             if not (options.image and options.command):
                 self.parser.error("-s/--schedule requires -i/--image and -c/--command")
-            self.schedule(options.image, options.command, options.schedule, options.restart-policy,
+            self.schedule(options.image, options.command, options.schedule, options.restart_policy,
                           options.mount)
 
         if options.remove:
