@@ -105,7 +105,11 @@ class SwarmManager(object):
 
         if options.state:
             container = self.get_service_container(options.state)
-            print(json.dumps(container))
+            status = {
+                'container':    container,
+                'logs':         container.logs().decode()
+            }
+            print(json.dumps(status))
 
 
 # ENTRYPOINT
