@@ -60,7 +60,7 @@ class SwarmManager(object):
         if mountdir is not None:
             mounts.append('%s:/share:rw' % mountdir)
         return self.docker_client.services.create(image, command, name=name, mounts=mounts,
-                                                  restart_policy=restart_policy)
+                                                  restart_policy=restart_policy, tty=True)
 
     def get_service(self, name):
         """
